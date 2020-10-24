@@ -1,0 +1,85 @@
+version: '3.8'
+services:
+  elasticdfir01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+    container_name: elasticdfir01
+    hostname: elasticdfir01
+    environment:
+      - node.name=elasticdfir01
+      - cluster.name=es-dfir-docker-cluster
+      - discovery.seed_hosts=elasticdfir02      
+      - cluster.initial_master_nodes=elasticdfir01, elasticdfir02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data:rw
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+
+  elasticdfir02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+    container_name: elasticdfir02
+    hostname: elasticdfir02
+    environment:
+      - node.name=elasticdfir02
+      - cluster.name=es-dfir-docker-cluster
+      - discovery.seed_hosts=elasticdfir01
+      - cluster.initial_master_nodes=elasticdfir01,elasticdfir02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data02:/usr/share/elasticsearch/data:rw
+    ports:
+      - 9201:9201
+    networks:
+      - elastic
+
+  logstash:
+    image: logstash:7.7.0
+    container_name: logstash
+    hostname: logstash
+    depends_on: 
+      - elasticdfir01
+      - elasticdfir02  
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/pipeline/:/usr/share/logstash/pipeline/:ro
+    ports:
+      - 5044:5044
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.9.2
+    container_name: kibana
+    hostname: kibana
+    depends_on: 
+      - elasticdfir01
+      - elasticdfir02
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://elasticdfir01:9200
+      ELASTICSEARCH_HOSTS: http://elasticdfir01:9200
+    networks:
+      - elastic
+
+volumes:
+  data01:
+    driver: local
+  data02:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge

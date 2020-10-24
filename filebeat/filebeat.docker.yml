@@ -1,0 +1,34 @@
+filebeat.config.modules:
+  enabled: true
+  path: /modules.d/*.yml
+
+
+filebeat.modules:
+- module: auditd
+  log:
+    enabled: true
+    var.paths: ["/volume/audit*"]
+    exclude_files: ['\.gz$']    
+
+- module: system
+  syslog:
+    enabled: true
+    var.paths: ["/volume/syslog*"]
+    exclude_files: ['\.gz$']
+  auth:
+    enabled: true
+    var.paths: ["/volume/auth.log*"]
+    exclude_files: ['\.gz$']
+
+- module: iptables
+  log:
+    enabled: false
+    var.paths: ["/volume/iptables.log*"]
+    var.input: "file"
+    exclude_files: ['\.gz$']
+
+output.elasticsearch:
+  hosts: ["elasticdfir01:9200"]
+
+setup.kibana:
+  host: "kibana:5601"  
