@@ -1,4 +1,4 @@
 
 docker stop filebeat ; docker rm filebeat
-docker run -d --net=elastic_elastic --name=filebeat --volume="$(pwd)/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro" --volume="/home/koenv/elastic/logs/:/volume/:ro" -e -strict.perms=false docker.elastic.co/beats/filebeat:7.9.2 filebeat
+docker run -d --net=elastic_elastic --name=filebeat --volume="$(pwd)/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro" --volume="/home/dfir/elastic/logs/:/volume/:ro" -e -strict.perms=false docker.elastic.co/beats/filebeat:7.9.2 filebeat
 docker exec -it filebeat sh -c "/usr/share/filebeat/filebeat setup -e"
