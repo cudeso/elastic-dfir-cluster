@@ -1,0 +1,63 @@
+# Logstash for LOKI log files
+# Koen Van Impe
+#
+
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  fingerprint {
+  }
+  if "inject" in [tags] {
+      grok {
+        patterns_dir => ["/usr/share/logstash/patterns"]
+
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: FILE: %{GREEDYDATA:file.name} SCORE: %{INT:file.score} TYPE: %{WORD:file.type} SIZE: %{INT:file.size} FIRST_BYTES: %{WORD:file.firstbytes} / %{WORD:file.firstbytes_str} MD5: %{WORD:file.hash.md5} SHA1: %{WORD:file.hash.sha1} SHA256: %{WORD:file.hash.sha256} CREATED: %{GREEDYDATA:file.created} MODIFIED: %{GREEDYDATA:file.mtime} ACCESSED: %{GREEDYDATA:file.accessed} REASON_1: %{GREEDYDATA:file.reason_1} TYPE: %{GREEDYDATA:loki.match.hashtype} HASH: %{GREEDYDATA:loki.match.hash} SUBSCORE: %{INT:file.subscore} DESC: %{GREEDYDATA:loki.match.file}"}
+        match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: Results: %{INT:scanresult.alerts:int} alerts, %{INT:scanresult.warning:int} warnings, %{INT:scanresult.notices:int} notices"}
+        match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: FILE: %{GREEDYDATA:file.name} SCORE: %{INT:file.score} TYPE: %{WORD:file.type} SIZE: %{INT:file.size} FIRST_BYTES: %{WORD:file.firstbytes} / %{GREEDYDATA:file.firstbytes_str} MD5: %{WORD:file.hash.md5} SHA1: %{WORD:file.hash.sha1} SHA256: %{WORD:file.hash.sha256} CREATED: %{GREEDYDATA:file.created} MODIFIED: %{GREEDYDATA:file.mtime} ACCESSED: %{GREEDYDATA:file.accessed} REASON_1: %{GREEDYDATA:file.reason_1} MATCH: %{GREEDYDATA:file.reason_1_match} SUBSCORE: %{INT:file.subscore} DESCRIPTION: %{GREEDYDATA:file.description} REF: %{GREEDYDATA:file.ref} MATCHES: %{GREEDYDATA:file.matches}"}
+        match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: FILE: %{GREEDYDATA:file.name} SCORE: %{INT:file.score} TYPE: %{WORD:file.type} SIZE: %{INT:file.size} FIRST_BYTES: %{GREEDYDATA:file.firstbytes} / %{GREEDYDATA:file.firstbytes_str} MD5: %{WORD:file.hash.md5} SHA1: %{WORD:file.hash.sha1} SHA256: %{WORD:file.hash.sha256} CREATED: %{GREEDYDATA:file.created} MODIFIED: %{GREEDYDATA:file.mtime} ACCESSED: %{GREEDYDATA:file.accessed} REASON_1: %{GREEDYDATA:file.reason_1} PATTERN: %{GREEDYDATA:file.reason_1_pattern} SUBSCORE: %{INT:file.subscore} DESC: %{GREEDYDATA:loki.match.file}"}
+        match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: %{GREEDYDATA:loki.message.output} PID: %{INT:process.pid} NAME: %{GREEDYDATA:process.name} COMMAND: %{GREEDYDATA:process.command_line} IP: %{IP:destination.ip} PORT: %{INT:destination.port} DESC: %{GREEDYDATA:loki.match.c2}"}
+        match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: %{GREEDYDATA:loki.message.output} PID: %{INT:process.pid} NAME: %{GREEDYDATA:process.name} COMMAND: %{GREEDYDATA:process.command_line} IP: %{IP:source.ip} PORT: %{INT:source.port}"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: FILE: %{GREEDYDATA:file.name} SCORE: %{INT:file.score} TYPE: %{WORD:file.type} SIZE: %{INT:file.size} FIRST_BYTES: %{GREEDYDATA:file.firstbytes} CREATED: %{GREEDYDATA:file.created} MODIFIED: %{GREEDYDATA:file.mtime} ACCESSED: %{GREEDYDATA:file.accessed} REASON_1: %{GREEDYDATA:file.reason_1} PATTERN: %{GREEDYDATA:file.pattern} SUBSCORE: %{INT:file.subscore} DESC: %{GREEDYDATA:loki.match.file}"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: %{GREEDYDATA:loki.message.output} PID: %{INT:process.pid} NAME: %{GREEDYDATA:process.name} COMMAND: %{GREEDYDATA:process.command_line} LIP: %{IP:source.ip} LPORT: %{INT:source.port} RIP: %{IP:destination.ip} RPORT: %{INT:destination.port}"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: %{GREEDYDATA:loki.message.output} PID: %{INT:process.pid} NAME: %{GREEDYDATA:process.name} OWNER: %{GREEDYDATA:process.owner} CMD: %{GREEDYDATA:process.command_line} PATH: %{GREEDYDATA:process.working_directory} IMPLANTED PE: %{INT:process.implanted_pe} IMPLANTED SHC: %{INT:process.implanted_shc}"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: %{GREEDYDATA:loki.message.output} PID: %{INT:process.pid} NAME: %{GREEDYDATA:process.name} OWNER: %{GREEDYDATA:process.owner} CMD: %{GREEDYDATA:process.command_line} PATH: %{GREEDYDATA:process.working_directory}"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: %{GREEDYDATA:loki.message.output} PID: %{INT:process.pid} NAME: %{GREEDYDATA:process.name} OWNER: %{GREEDYDATA:process.owner} CMD: %{GREEDYDATA:process.command_line} PATH: %{GREEDYDATA:process.working_directory}"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: File Name Characteristics initialized with %{INT:ioc.regex:int} regex patterns"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: Initialized %{INT:ioc.yara:int} Yara rules"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: False Positive Hashes initialized with %{INT:ioc.hash.fp:int} hashes"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: Malicious SHA256 Hashes initialized with %{INT:ioc.hash.sha256:int} hashes"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: Malicious SHA1 Hashes initialized with %{INT:ioc.hash.sha1:int} hashes"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: Malicious MD5 Hashes initialized with %{INT:ioc.hash.md5:int} hashes"}
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: C2 server indicators initialized with %{INT:ioc.c2:int} elements"}
+
+		# Fallback
+		match => { "message" => "%{DATE_LOKI:loki.timestamp} %{HOSTNAME:host.hostname} LOKI: %{WORD:loki.message.type}: MODULE: %{WORD:loki.module} MESSAGE: %{GREEDYDATA:loki.unmatchedentry}"}
+      }
+      date {
+        match => [ "loki.timestamp", "YYYYMMdd'T'HH:mm:ssZ"]
+        locale => "en"
+        timezone => "UTC"
+      }
+
+      geoip {
+		source => "destination.ip"
+		add_field => { "destination.update" => true }
+      }
+      geoip {
+		source => "source.ip"
+		default_database_type => "ASN"
+		target => "geoip.whois"
+      }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://elasticdfir01:9200"]
+    index => "logstash-filebeat-loki-5044-%{+YYYY.MM.dd}"
+  }
+}
