@@ -1,0 +1,39 @@
+filebeat.config.modules:
+  enabled: true
+  path: /modules.d/*.yml
+
+filebeat.inputs:
+- type: log
+  paths:
+   - /volume/loki*.log
+  tags: ["inject", "loki"]
+
+filebeat.modules:
+- module: auditd
+  log:
+    enabled: true
+    var.paths: ["/volume/audit*"]
+    exclude_files: ['\.gz$']    
+
+- module: system
+  syslog:
+    enabled: true
+    var.paths: ["/volume/syslog*"]
+    exclude_files: ['\.gz$']
+  auth:
+    enabled: true
+    var.paths: ["/volume/auth.log*"]
+    exclude_files: ['\.gz$']
+
+- module: iptables
+  log:
+    enabled: false
+    var.paths: ["/volume/iptables.log*"]
+    var.input: "file"
+    exclude_files: ['\.gz$']
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+setup.kibana:
+  host: "kibana:5601"  
