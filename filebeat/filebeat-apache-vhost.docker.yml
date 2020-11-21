@@ -1,8 +1,8 @@
 filebeat.inputs:
 - type: log
   paths:
-   - /volume/loki*.log
-  tags: ["inject", "loki"]
+   - /volume/apache*
+  tags: ["inject", "apache"]
 
 output.logstash:
   hosts: ["logstash:5044"]
