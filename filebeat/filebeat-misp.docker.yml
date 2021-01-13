@@ -1,0 +1,28 @@
+filebeat.config.modules:
+  enabled: true
+  path: /modules.d/*.yml
+
+filebeat.modules:
+- module: misp
+  threat:
+    enabled: true
+    # API key to access MISP
+    var.api_key: ""
+
+    # Array object in MISP response
+    var.json_objects_array: "response.Attribute"
+
+    # URL of the MISP REST API
+    var.url: "https://misp/attributes/restSearch/last:15m"
+    var.http_client_timeout: 60s
+    var.interval: 15m
+    var.ssl: |-
+      {
+        verification_mode: none
+      }
+
+output.elasticsearch:
+  hosts: ["elasticdfir01:9200"]
+
+setup.kibana:
+  host: "kibana:5601"
