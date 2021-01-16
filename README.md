@@ -11,6 +11,8 @@ Initiliaze via `init-elastic-dfir.sh`
 
 Start containers via `start-elastic-dfir.sh`
 
+Elastic requires that you have set `vm.max_map_count` sufficiently high. Check /etc/sysctl.conf. A good value is 262144
+
 
 ## Import logs
 
