@@ -40,12 +40,9 @@ Do not forget to import the dashboards and vizualisations.
 `packetbeat setup -e   -E output.logstash.enabled=false   -E output.elasticsearch.hosts=['ELK:9200']   -E output.elasticsearch.username=packetbeat_internal   -E output.elasticsearch.password=YOUR_PASSWORD   -E setup.kibana.host=ELK:5601`
 
 `filebeat setup -e   -E output.logstash.enabled=false   -E output.elasticsearch.hosts=['ELK:9200']   -E output.elasticsearch.username=filebeat_internal   -E output.elasticsearch.password=YOUR_PASSWORD   -E setup.kibana.host=ELK:5601`
-<<<<<<< HEAD
 
 ## NGINX and Cacti
 
 The `docker-compose.yml-with-nginx_cacti` contains the settings to run NGINX as a reverse proxy in front of Elastic. The reverse proxy runs on port 8443 and uses locally (outside Docker) installed certificates from Let's Encrypt. The reverse proxy maps Elastic and Cacti to two Docker containers.
 
 In the NGINX configuration, change the hostname, certificate information file and the htpassword file.
-=======
->>>>>>> e4f1f438138234fc601c0a7dbc40b32996d90f37
