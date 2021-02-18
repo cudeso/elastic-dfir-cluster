@@ -1,0 +1,172 @@
+version: '3.8'
+services:
+  elasticdfir01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+    container_name: elasticdfir01
+    hostname: elasticdfir01
+    environment:
+      - node.name=elasticdfir01
+      - cluster.name=es-dfir-docker-cluster
+      - discovery.seed_hosts=elasticdfir02      
+      - cluster.initial_master_nodes=elasticdfir01, elasticdfir02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data:rw
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+
+  elasticdfir02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+    container_name: elasticdfir02
+    hostname: elasticdfir02
+    environment:
+      - node.name=elasticdfir02
+      - cluster.name=es-dfir-docker-cluster
+      - discovery.seed_hosts=elasticdfir01
+      - cluster.initial_master_nodes=elasticdfir01,elasticdfir02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data02:/usr/share/elasticsearch/data:rw
+    ports:
+      - 9201:9201
+    networks:
+      - elastic
+
+  logstash:
+    image: logstash:7.7.0
+    container_name: logstash
+    hostname: logstash
+    depends_on: 
+      - elasticdfir01
+      - elasticdfir02  
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/pipeline/:/usr/share/logstash/pipeline/:ro
+      - ./logstash/patterns/:/usr/share/logstash/patterns/:ro
+    ports:
+      - 5044:5044
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.9.2
+    container_name: kibana
+    hostname: kibana
+    depends_on: 
+      - elasticdfir01
+      - elasticdfir02
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://elasticdfir01:9200
+      ELASTICSEARCH_HOSTS: http://elasticdfir01:9200
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    networks:
+      - elastic
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    depends_on:
+      - cacti
+   
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/error.log:/etc/nginx/error_log.log
+      - ./nginx/cache/:/etc/nginx/cache
+      - /etc/letsencrypt/live/website.domain.corp/fullchain.pem:/etc/ssl/website.domain.corp.pem
+      - /etc/letsencrypt/live/website.domain.corp/privkey.pem:/etc/ssl/website.domain.corp.key
+      - ./nginx/options-ssl-nginx.conf:/etc/letsencrypt/options-ssl-nginx.conf
+      - ./nginx/htpasswd.users:/etc/nginx/htpasswd.users
+    ports: 
+      - 8443:8443
+    networks:
+      - elastic
+
+  cacti:
+    image: "smcline06/cacti"
+    container_name: cacti
+    hostname: cacti
+    ports:
+      - 80
+    networks:
+      - elastic      
+    environment:
+      - DB_NAME=cacti_master
+      - DB_USER=cactiuser
+      - DB_PASS=cactipassword
+      - DB_HOST=cacti_db
+      - DB_PORT=3306
+      - DB_ROOT_PASS=rootpassword
+      - INITIALIZE_DB=1
+      - TZ=Europe/Brussels
+    volumes:
+      - cacti-data:/cacti
+      - cacti-spine:/spine
+      - cacti-backups:/backups
+    links:
+      - cacti_db
+      
+  cacti_db:
+    image: "mariadb:10.3"
+    container_name: cacti_db
+    hostname: db
+    ports:
+      - 3306
+    networks:
+      - elastic      
+    command:
+      - mysqld
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=200
+      - --max_heap_table_size=128M
+      - --max_allowed_packet=32M
+      - --tmp_table_size=128M
+      - --join_buffer_size=128M
+      - --innodb_buffer_pool_size=1G
+      - --innodb_doublewrite=ON
+      - --innodb_flush_log_at_timeout=3
+      - --innodb_read_io_threads=32
+      - --innodb_write_io_threads=16
+      - --innodb_buffer_pool_instances=9
+      - --innodb_file_format=Barracuda
+      - --innodb_large_prefix=1
+      - --innodb_io_capacity=5000
+      - --innodb_io_capacity_max=10000
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - TZ=Europe/Brussels
+    volumes:
+      - cacti-db:/var/lib/mysql
+
+volumes:
+  data01:
+    driver: local
+  data02:
+    driver: local
+  cacti-db:
+    driver: local  
+  cacti-data:
+    driver: local  
+  cacti-spine:
+    driver: local  
+  cacti-backups:
+    driver: local     
+
+networks:
+  elastic:
+    driver: bridge
